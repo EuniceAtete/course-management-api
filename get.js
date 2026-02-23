@@ -18,6 +18,13 @@ app.get('/courses',(req,res) => {
     res.json(courses);
 })
 
+
+app.get('/courses',(req,res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if(!course) return res.status(404).send('Course not found');
+    res.json(course);
+});
+
 app.listen(5000,() => {
     console.log("Server running on port 5000...")
 })
