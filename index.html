@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Courses App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+
+    <div class="max-w-4xl mx-auto">
+
+        <h1 class="text-4xl font-bold text-center mb-8">Courses App</h1>
+
+        <!-- Add Course Form -->
+        <div class="bg-white p-6 rounded shadow mb-6">
+            <h2 class="text-2xl font-semibold mb-4">Add New Course</h2>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="name" placeholder="Course Name" class="p-2 border rounded flex-1">
+                <input type="number" id="authorId" placeholder="Author ID" class="p-2 border rounded w-32">
+                <input type="number" id="price" placeholder="Price" class="p-2 border rounded w-32">
+                <button onclick="addCourse()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Add</button>
+            </div>
+        </div>
+
+        <!-- Courses List -->
+        <div id="coursesList" class="space-y-4"></div>
+
+    </div>
+
+    <script>
+        const apiUrl = 'http://localhost:5000/courses';
+
+        // Fetch and display courses
+        async function fetchCourses() {
+            const res = await fetch(apiUrl);
+            const courses = await res.json();
+            const container = document.getElementById('coursesList');
+            container.innerHTML = '';
+            courses.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded shadow flex justify-between items-center';
+                div.innerHTML = `
+                    <div>
+                        <h3 class="text-xl font-semibold">${c.name}</h3>
+                        <p class="text-gray-600">Price: $${c.price} | Author ID: ${c.authorId}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="updateCoursePrompt(${c.id})" class="bg-yellow-400 px-3 py-1 rounded hover:bg-yellow-500">Update</button>
+                        <button onclick="deleteCourse(${c.id})" class="bg-red-500 px-3 py-1 rounded text-white hover:bg-red-600">Delete</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Add course
+        async function addCourse() {
+            const name = document.getElementById('name').value;
+            const authorId = parseInt(document.getElementById('authorId').value);
+            const price = parseFloat(document.getElementById('price').value);
+
+            const res = await fetch(apiUrl + '/addNew', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, authorId, price })
+            });
+            const data = await res.json();
+            alert(data.message);
+            document.getElementById('name').value = '';
+            document.getElementById('authorId').value = '';
+            document.getElementById('price').value = '';
+            fetchCourses();
+        }
+
+        // Delete course
+        async function deleteCourse(id) {
+            const res = await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            alert(data.message);
+            fetchCourses();
+        }
+
+        // Update course
+        async function updateCoursePrompt(id) {
+            const name = prompt("Enter new name (leave blank to keep current):");
+            const authorId = prompt("Enter new author ID (leave blank to keep current):");
+            const price = prompt("Enter new price (leave blank to keep current):");
+
+            const body = {};
+            if (name) body.name = name;
+            if (authorId) body.authorId = parseInt(authorId);
+            if (price) body.price = parseFloat(price);
+
+            const res = await fetch(`${apiUrl}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json();
+            alert(data.message);
+            fetchCourses();
+        }
+
+        // Load courses initially
+        fetchCourses();
+    </script>
+
+</body>
+</html>
