@@ -34,4 +34,38 @@ app.get('/courses', (req, res) => {
     res.send(courses);
 });
 
+app.get('/courses/:id', (req, res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send({ message: "Course not found" });
+    res.send(course);
+});
+
+app.put('/courses/:id', (req, res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send({ message: "Course not found" });
+
+    const schema = Joi.object({
+        name: Joi.string().min(3),
+        authorId: Joi.number(),
+        price: Joi.number().positive()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) return res.status(400).send({ message: error.details[0].message });
+
+    course.name = req.body.name || course.name;
+    course.authorId = req.body.authorId || course.authorId;
+    course.price = req.body.price || course.price;
+
+    res.send({ message: "Course updated", updatedCourse: course });
+});
+
+app.delete('/courses/:id', (req, res) => {
+    const index = courses.findIndex(c => c.id === parseInt(req.params.id));
+    if (index === -1) return res.status(404).send({ message: "Course not found" });
+
+    const deletedCourse = courses.splice(index, 1)[0];
+    res.send({ message: "Course deleted", deletedCourse });
+});
+
 app.listen(5000, () => console.log("Server running on port 5000..."));
